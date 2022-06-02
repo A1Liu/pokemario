@@ -15,16 +15,18 @@ export default function Page() {
 
     let running = true;
     const game = new Game(canvas.width, canvas.height);
-    const render = () => {
+    const render = (lastRenderedAt: number) => {
       if (!running) {
         return;
       }
-      game.tick(16);
+
+      const now = Date.now();
+      game.tick(now - lastRenderedAt);
       game.render(canvas, ctx);
-      requestAnimationFrame(render);
+      requestAnimationFrame(() => render(now));
     };
 
-    render();
+    requestAnimationFrame(render.bind(null, Date.now()));
 
     return () => {
       running = false;

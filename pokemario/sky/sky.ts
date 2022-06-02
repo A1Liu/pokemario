@@ -5,6 +5,7 @@ import {
   Sprite,
   RenderableGroup,
   Vector2,
+  applyVelocity,
 } from "../sprite";
 import { Game } from "../game";
 import { ImageLoader } from "../image-loader";
@@ -16,14 +17,22 @@ const cloudWidths = [100, 150, 200, 250];
 const minCloudsPerScreen = 1;
 const maxCloudsPerScreen = 5;
 
-class Cloud extends Sprite {
+class Cloud {
+  opacity = 0;
+  sprite: Sprite;
+  velocity: Vector2 = { x: 0, y: 0 };
+  position: Vector2 = { x: 0, y: 0 };
+  size = { width: 0, height: 0 };
+
   constructor(position: Position) {
-    super(
+    this.opacity = 0;
+    this.sprite = new Sprite(
       position,
       projectSizeByWidth(cloud, pickOne(cloudWidths)),
       ImageLoader.load(cloud.src)
     );
-    this.opacity = 0;
+    this.position = this.sprite.position;
+    this.size = this.sprite.size;
   }
 
   tick(delta: number, game: Game) {
@@ -36,14 +45,20 @@ class Cloud extends Sprite {
       },
       delta
     ).opacity;
-    super.tick(delta, game);
+    applyVelocity(this.sprite.position, this.velocity);
+    this.position = this.sprite.position;
+    this.size = this.sprite.size;
+  }
+
+  render(game: Game, ctx: CanvasRenderingContext2D) {
+    this.sprite.render(game, ctx);
   }
 }
 
 export class SkyBackground implements Renderable {
   velocity: Vector2 = { x: 0, y: 0 };
   size: Size = { width: 0, height: 0 };
-  clouds = new RenderableGroup();
+  clouds: Set<Cloud> = new Set();
 
   constructor(public position: Position, game: Game) {
     this.size.width = game.width;
@@ -53,8 +68,8 @@ export class SkyBackground implements Renderable {
 
   createNewClouds(game: Game) {
     const targetCloudCount = randInt(minCloudsPerScreen, maxCloudsPerScreen);
-    while (targetCloudCount > this.clouds.sprites.size) {
-      this.clouds.sprites.add(
+    while (targetCloudCount > this.clouds.size) {
+      this.clouds.add(
         new Cloud({
           x: randInt(0, game.width),
           y: randInt(0, Math.round((2 / 3) * game.height)),
@@ -73,21 +88,21 @@ export class SkyBackground implements Renderable {
     }
 
     // Check if any clouds are off-screen
-    const numSpritesBefore = this.clouds.sprites.size;
-    filterSet(this.clouds.sprites, (sprite) => {
+    const numSpritesBefore = this.clouds.size;
+    filterSet(this.clouds, (cloud) => {
       return (
-        sprite.position.x + sprite.size.width >= 0 &&
-        sprite.position.x <= game.width
+        cloud.position.x + cloud.size.width >= 0 &&
+        cloud.position.x <= game.width
       );
     });
-    if (numSpritesBefore > this.clouds.sprites.size) {
+    if (numSpritesBefore > this.clouds.size) {
       this.createNewClouds(game);
     }
 
-    this.clouds.sprites.forEach((sprite) => {
-      sprite.velocity = this.velocity;
+    this.clouds.forEach((cloud) => {
+      cloud.velocity = this.velocity;
+      cloud.tick(delta, game);
     });
-    this.clouds.tick(delta, game);
   }
 
   render(game: Game, ctx: CanvasRenderingContext2D): void {
@@ -97,6 +112,6 @@ export class SkyBackground implements Renderable {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, game.width, game.height);
 
-    this.clouds.render(game, ctx);
+    this.clouds.forEach((cloud) => cloud.render(game, ctx));
   }
 }

@@ -50,7 +50,7 @@ export class MarioCharacter extends SpriteSheet {
 
   currentFrameIndex = 0;
   currentFrames: Vector2[] = this.standingFrames;
-  imageScale: Vector2 = { x: 1, y: 1 };
+  imageScale: Vector2 = { x: -1, y: 1 };
   lastFrameRenderedSince = 0;
 
   constructor(public relPosition: Vector2) {

@@ -52,10 +52,31 @@ class Ground extends Renderable {
     ctx.textBaseline = "bottom";
     ctx.font = "24px monospace";
     ctx.fillStyle = "#fff";
-    ctx.fillText(`lives: ${game.lives}`, game.width - 10, game.height - 10);
+    ctx.fillText(
+      `lives: ${game.lives}`,
+      game.width - 10,
+      game.height - 10 - 24 - 10
+    );
+
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.font = "24px monospace";
+    ctx.fillStyle = "#fff";
+    ctx.fillText(`fps: ${this.getFps()}`, game.width - 10, game.height - 10);
   }
 
-  tick(delta: number, game: Game): void {}
+  fpsSamples: number[] = [];
+
+  getFps() {
+    return Math.floor(
+      this.fpsSamples.reduce((a, b) => a + b, 0) / this.fpsSamples.length
+    );
+  }
+
+  tick(delta: number, game: Game): void {
+    this.fpsSamples.push(1e3 / delta);
+    this.fpsSamples = this.fpsSamples.slice(0, 1000);
+  }
 }
 
 export class Landscape extends RenderableGroup<

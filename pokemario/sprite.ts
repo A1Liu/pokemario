@@ -53,7 +53,13 @@ export abstract class Renderable {
   abstract render(game: Game, ctx: CanvasRenderingContext2D): void;
 }
 
-export abstract class Sprite extends Renderable {
+export function applyVelocity(position: Vector2, velocity: Vector2) {
+  position.x += velocity.x;
+  position.y += velocity.y;
+  return position;
+}
+
+export class Sprite extends Renderable {
   opacity = 1;
   velocity: Vector2 = {
     x: 0,
