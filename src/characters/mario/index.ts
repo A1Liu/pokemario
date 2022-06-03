@@ -117,7 +117,9 @@ export class MarioCharacter extends SpriteSheet {
 		if (game.monitor.isPressed(KeyboardKey.Up) && !this.isAirborne) {
 			this.currentFrameIndex = 0
 			this.currentFrames = this.jumpingFrames
-			this.velocity = { x: this.isLeft() ? -10 : 10, y: 30 }
+
+			const dir = this.isLeft() ? -1 : 1
+			this.velocity = { x: dir * 15, y: 30 }
 			this.isAirborne = true
 		}
 
@@ -130,10 +132,14 @@ export class MarioCharacter extends SpriteSheet {
 		applyVelocity(delta, this.position, this.velocity)
 		this.velocity.y -= 0.2 * delta
 
-		if (!this.isAirborne && Math.abs(this.velocity.x) > 0.001) {
+		// applies a friction force when mario hits the ground.
+		if (!this.isAirborne && this.velocity.x !== 0) {
+			// Friction is applied in the opposite direction of velocity
 			const dir = this.velocity.x < 0 ? 1 : -1
-			let friction = dir * 0.2 * delta
-			this.velocity.x += friction
+			let friction = dir * 0.05 * delta
+
+			// You cannot gain speed in the opposite direction from friction
+			this.velocity.x = clamp(this.velocity.x + friction, 0, Infinity)
 		}
 
 		const groundY = game.landscape.ground.position.y
