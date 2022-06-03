@@ -1,12 +1,14 @@
 import marioSheet from "./mario.png";
-import { Renderable, Size, Vector2 } from "../../sprite";
+import { applyVelocity, Renderable, Size, Vector2 } from "../../sprite";
 import { Game } from "../../game";
 import { ImageLoader } from "../../image-loader";
 import { projectSizeByHeight } from "../../utils";
+import { KeyboardKey } from "../../interaction-monitor";
 
 class SpriteSheet implements Renderable {
   spriteOffset: Vector2 = { x: 0, y: 0 };
   position: Vector2 = { x: 0, y: 0 };
+  velocity: Vector2 = { x: 0, y: 0 };
 
   constructor(
     public image: HTMLImageElement,
@@ -35,7 +37,9 @@ class SpriteSheet implements Renderable {
     );
   }
 
-  tick(delta: number, game: Game): void {}
+  tick(delta: number, game: Game): void {
+    applyVelocity(this.position, this.velocity);
+  }
 }
 
 export class MarioCharacter extends SpriteSheet {
@@ -46,6 +50,7 @@ export class MarioCharacter extends SpriteSheet {
     { x: 3, y: 0 },
     { x: 4, y: 0 },
   ];
+  readonly jumpingFrames: Vector2[] = [{ x: 5, y: 0 }];
   readonly timeBetweenFrames = 70;
 
   currentFrameIndex = 0;
@@ -91,6 +96,12 @@ export class MarioCharacter extends SpriteSheet {
   }
 
   tick(delta: number, game: Game) {
+    if (game.monitor.isPressed(KeyboardKey.Up)) {
+      this.currentFrameIndex = 0;
+      this.currentFrames = this.jumpingFrames;
+      this.velocity = { x: 1, y: 1 };
+    }
+
     if (this.lastFrameRenderedSince + delta > this.timeBetweenFrames) {
       this.nextFrame();
     } else {
@@ -101,6 +112,7 @@ export class MarioCharacter extends SpriteSheet {
       x: this.imageScale.x === -1 ? -this.size.width : 0,
       y: this.relPosition.y - this.size.height,
     };
+    super.tick(delta, game);
   }
 
   render(game: Game, ctx: CanvasRenderingContext2D) {
