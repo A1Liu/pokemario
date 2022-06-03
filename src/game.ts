@@ -2,7 +2,7 @@ import { Renderable, Sprite, Position } from './sprite'
 import { Landscape } from './sky'
 import { InteractionMonitor, KeyboardKey } from './interaction-monitor'
 import { MarioCharacter } from './characters/mario'
-import { clamp } from './utils';
+import { clamp } from './utils'
 
 // camera algo
 // x: clamp(mario.pos.x, 0, map.width) -> -20meters -> transform to image space
@@ -11,21 +11,20 @@ import { clamp } from './utils';
 // 1 s
 
 export class Camera {
-	locked: boolean = true;
-	position: Position = { x: 0, y: 0};
+	locked: boolean = true
+	position: Position = { x: 0, y: 0 }
 	width: number = 20
 	height: number = 10
-	worldToPixel: number = 10
+	worldToPixel: number = 1
 
-	constructor() {
-	}
+	constructor() {}
 
 	tick(delta: number, game: Game): void {
-		if (!this.locked) return;
+		if (!this.locked) return
 
-		const pos = game.player.position;
+		// const pos = game.player.position;
 
-		this.position = { x: clamp(pos.x  - 20, 0, game.height), y: clamp(pos.y - 1, 0, game.width) };
+		// this.position = { x: clamp(pos.x  - 20, 0, game.height), y: clamp(pos.y - 1, 0, game.width) };
 	}
 
 	// World-space: (C is bottom-left of camera)
@@ -37,7 +36,7 @@ export class Camera {
 	//  . |
 	//  3 |           o
 	//  2 |          -^-
-	//  1 |       C   ^
+	//  1 |      C    ^
 	//  0 |------------------------
 	//    0  1  2  3  . . .  9 10 X
 	//
@@ -48,18 +47,54 @@ export class Camera {
 	//  20 |
 	//   . |
 	//   . |
-	//   . |    o
-	//  90 |   -^-
-	// 100 |C   ^
-	//    0 |------------------------
+	//   . |     o
+	//  90 |    -^-
+	// 100 |C    ^
+	//   0 |------------------------
 	//     0  1  2  3  . . .  9 10 X
 	screenSpaceCoordinates(position: Position): Position {
-		const cameraX = position.x - this.position.x;
-		const cameraY = position.y - this.position.y;
+		const posXInCameraSpace = position.x - this.position.x
+		const posYInCameraSpace = position.y - this.position.y
 
-		const canvasX = cameraX * this.worldToPixel	;
-		const canvasY = (this.height - cameraY) * this.worldToPixel;
-		return {x: canvasX, y: canvasY}
+		const posXInCanvasSpace = posXInCameraSpace * this.worldToPixel
+		const posYInCanvasSpace =
+			(this.height - posYInCameraSpace) * this.worldToPixel
+		return { x: posXInCanvasSpace, y: posYInCanvasSpace }
+	}
+
+	screenSpaceDimensions(
+		width: number,
+		height: number,
+	): { width: number; height: number } {
+		return {
+			width: width * this.worldToPixel,
+			height: height * this.worldToPixel,
+		}
+	}
+
+	screenDimensions(): { width: number; height: number } {
+		return {
+			width: this.width * this.worldToPixel,
+			height: this.height * this.worldToPixel,
+		}
+	}
+
+	getScreenBoundingBox(
+		position: Position,
+		width: number,
+		height: number,
+	): { x: number; y: number; width: number; height: number } {
+		const coords = this.screenSpaceCoordinates(position)
+		const screenHeight = height * this.worldToPixel
+
+		// console.log('bbox', coords, screenHeight);
+
+		return {
+			x: coords.x,
+			y: coords.y - screenHeight,
+			width: width * this.worldToPixel,
+			height: screenHeight,
+		}
 	}
 }
 
@@ -78,11 +113,11 @@ export class Game {
 	lives: number = 3
 
 	constructor(public width: number, public height: number) {
+		this.camera = new Camera()
 		this.landscape = new Landscape(this)
 		this.player = new MarioCharacter(this.landscape.ground.position)
 
 		this.renderables.push(this.landscape, this.player)
-		this.camera = new Camera()
 	}
 
 	destroy() {
@@ -93,12 +128,15 @@ export class Game {
 		this.width = canvas.width
 		this.height = canvas.height
 
+		this.camera.width = canvas.width / this.camera.worldToPixel
+		this.camera.height = canvas.height / this.camera.worldToPixel
+
 		this.timeElapsed += delta
 		for (const renderable of this.renderables) {
 			renderable.tick(delta, this)
 		}
 
-		this.camera.tick(delta, this);
+		this.camera.tick(delta, this)
 	}
 
 	render(ctx: CanvasRenderingContext2D) {

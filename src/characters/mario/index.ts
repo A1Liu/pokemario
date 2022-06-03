@@ -23,16 +23,18 @@ class SpriteSheet implements Renderable {
 	}
 
 	render(game: Game, ctx: CanvasRenderingContext2D): void {
+		const bbox = game.camera.getScreenBoundingBox(this.position, this.size.width, this.size.height);
+
 		ctx.drawImage(
 			this.image,
 			this.spriteOffset.x,
 			this.spriteOffset.y,
 			this.spriteSize.width,
 			this.spriteSize.height,
-			this.position.x,
-			this.position.y,
-			this.size.width,
-			this.size.height,
+			bbox.x,
+			bbox.y,
+			bbox.width,
+			bbox.height,
 		)
 	}
 
@@ -109,7 +111,7 @@ export class MarioCharacter extends SpriteSheet {
 
 		this.position = {
 			x: this.imageScale.x === -1 ? -this.size.width : 0,
-			y: this.relPosition.y - this.size.height,
+			y: game.landscape.ground.position.y,
 		}
 		super.tick(delta, game)
 	}

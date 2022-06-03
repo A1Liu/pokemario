@@ -42,7 +42,7 @@ export function vec2mul(scalar: number, vec: Vector2): Vector2 {
 }
 
 export function vec2project(vec: Vector2, screen: Size) {
-	const projectedHeight = (vec.y / BaseScreenHeight) * screen.height;
+	const projectedHeight = (vec.y / BaseScreenHeight) * screen.height
 
 	return {
 		x: 0,
