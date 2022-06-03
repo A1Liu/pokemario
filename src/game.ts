@@ -14,8 +14,8 @@ export class Camera {
 	locked: boolean = true
 	position: Position = { x: 0, y: 0 }
 	width: number = 20
-	height: number = 10
-	worldToPixel: number = 1
+	height: number = 25
+	worldToPixel: number = 10
 
 	constructor() {}
 
@@ -114,8 +114,9 @@ export class Game {
 
 	constructor(public width: number, public height: number) {
 		this.camera = new Camera()
-		this.camera.width = width
-		this.camera.height = height
+
+		this.camera.width = canvas.width / this.camera.worldToPixel
+		this.camera.height = canvas.height / this.camera.worldToPixel
 
 		this.landscape = new Landscape(this)
 		this.player = new MarioCharacter()

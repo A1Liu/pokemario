@@ -42,7 +42,7 @@ class Ground extends Renderable {
 
 		this.position.y = dirtHeight + grassHeight
 
-		const {height, width } = camera.  screenDimensions()
+		const { height, width } = camera.screenDimensions()
 		ctx.textAlign = 'left'
 		ctx.textBaseline = 'bottom'
 		ctx.font = '24px monospace'

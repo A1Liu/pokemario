@@ -66,9 +66,13 @@ export abstract class Renderable {
 	abstract render(game: Game, ctx: CanvasRenderingContext2D): void
 }
 
-export function applyVelocity(position: Vector2, velocity: Vector2) {
-	position.x += velocity.x
-	position.y += velocity.y
+export function applyVelocity(
+	delta: number,
+	position: Vector2,
+	velocity: Vector2,
+) {
+	position.x += (velocity.x * delta) / 200
+	position.y += (velocity.y * delta) / 200
 	return position
 }
 
