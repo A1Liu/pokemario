@@ -57,7 +57,7 @@ jobs:
       - name: Add Github files
         run: |
           touch out/.nojekyll
-          echo a1liu.com >> out/CNAME
+          echo pokemario.a1liu.com >> out/CNAME
 
       - name: Deploy
         run: |
