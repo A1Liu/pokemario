@@ -114,8 +114,11 @@ export class Game {
 
 	constructor(public width: number, public height: number) {
 		this.camera = new Camera()
+		this.camera.width = width
+		this.camera.height = height
+
 		this.landscape = new Landscape(this)
-		this.player = new MarioCharacter(this.landscape.ground.position)
+		this.player = new MarioCharacter()
 
 		this.renderables.push(this.landscape, this.player)
 	}

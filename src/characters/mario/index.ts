@@ -59,7 +59,7 @@ export class MarioCharacter extends SpriteSheet {
 	imageScale: Vector2 = { x: -1, y: 1 }
 	lastFrameRenderedSince = 0
 
-	constructor(public relPosition: Vector2) {
+	constructor() {
 		super(
 			ImageLoader.load('/assets/mario.png'),
 			{
