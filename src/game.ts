@@ -4,12 +4,6 @@ import { InteractionMonitor, KeyboardKey } from './interaction-monitor'
 import { MarioCharacter } from './characters/mario'
 import { clamp } from './utils'
 
-// camera algo
-// x: clamp(mario.pos.x, 0, map.width) -> -20meters -> transform to image space
-// y: clamp(mario.pos.y + 5, 0, map.width) -> - 5meters -> transform to image space
-
-// 1 s
-
 export class Camera {
 	locked: boolean = true
 	position: Position = { x: 0, y: 0 }
@@ -22,6 +16,7 @@ export class Camera {
 	tick(delta: number, game: Game): void {
 		if (!this.locked) return
 
+		// TODO implement camera locking on mario
 		// const pos = game.player.position;
 
 		// this.position = { x: clamp(pos.x  - 20, 0, game.height), y: clamp(pos.y - 1, 0, game.width) };
@@ -86,8 +81,6 @@ export class Camera {
 	): { x: number; y: number; width: number; height: number } {
 		const coords = this.screenSpaceCoordinates(position)
 		const screenHeight = height * this.worldToPixel
-
-		// console.log('bbox', coords, screenHeight);
 
 		return {
 			x: coords.x,

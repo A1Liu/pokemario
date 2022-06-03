@@ -26,17 +26,6 @@ class SpriteSheet implements Renderable {
 	render(game: Game, ctx: CanvasRenderingContext2D): void {
 		const position = { ...this.position }
 
-		// if (this.imageScale.x < 0) {
-		// 	position.x -= this.size.width
-		// }
-
-		// console.log(
-		//	'before',
-		//	position,
-		//	this.size.width,
-		//	this.size.height,
-		// )
-
 		const bbox = game.camera.getScreenBoundingBox(
 			position,
 			this.size.width,
