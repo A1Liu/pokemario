@@ -14,8 +14,8 @@ if (!canvas || !ctx) {
 		canvas.height = canvas.getBoundingClientRect().height
 
 		const now = Date.now()
-		game.tick(now - lastRenderedAt)
-		game.render(canvas, ctx)
+		game.tick(canvas, now - lastRenderedAt)
+		game.render(ctx)
 		requestAnimationFrame(() => render(now))
 	}
 	requestAnimationFrame(render.bind(null, Date.now()))

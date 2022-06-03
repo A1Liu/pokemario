@@ -17,6 +17,10 @@ export interface Vector2 {
 	y: number
 }
 
+// 10m will be our screen height that all positions
+// and vectors are relative
+export const BaseScreenHeight = 10
+
 export function getBoundingBox(position: Vector2, size: Size) {
 	return {
 		startX: position.x,
@@ -34,6 +38,15 @@ export function vec2mul(scalar: number, vec: Vector2): Vector2 {
 	return {
 		x: vec.x * scalar,
 		y: vec.y * scalar,
+	}
+}
+
+export function vec2project(vec: Vector2, screen: Size) {
+	const projectedHeight = (vec.y / BaseScreenHeight) * screen.height;
+
+	return {
+		x: 0,
+		y: projectedHeight,
 	}
 }
 
