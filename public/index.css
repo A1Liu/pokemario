@@ -1,0 +1,18 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body,
+#__next,
+canvas {
+	height: 100%;
+	width: 100%;
+}
+
+canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+}

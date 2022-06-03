@@ -22,31 +22,16 @@ jobs:
           node-version: 16.10.0
           cache: yarn
 
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v1
-        with:
-          version: 0.9.1
-
-      - name: Next.js Cache
+      - name: Cache node_modules
         uses: actions/cache@v2
         with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.ts', '**.tsx') }}
+          path: node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Build Zig
-        run: zig build -Drelease-small
-
-      - name: Clean garbage
-        run: |
-          find public/ -name "*.o" -delete
-          find public/ -name "*.so" -delete
-          find public/ -name "*.so.0" -delete
-          rm -rf public/local public/programs public/install public/README.md
 
       - name: Build Site
         run: yarn build
