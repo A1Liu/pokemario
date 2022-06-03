@@ -1,4 +1,6 @@
 const std = @import("std");
+const root = @import("root");
+
 const mem = std.mem;
 
 const assert = std.debug.assert;
@@ -149,83 +151,18 @@ pub const Bump = struct {
     }
 };
 
-pub const Temp = struct {
-    const Self = @This();
+pub const Temp = TempAlloc.allocator;
+pub threadlocal var TempMark: Mark = Mark.ZERO;
 
-    mark: Mark,
-    previous: ?*Self,
+const TempAlloc = struct {
+    const InitialSize = if (@hasDecl(root, "liu_TempAlloc_InitialSize"))
+        root.liu_TempAlloc_InitialSize
+    else
+        256 * 1024;
 
-    const InitialSize = 1024 * 1024;
-
-    threadlocal var top: ?*Temp = null;
     threadlocal var bump = BumpState.init(InitialSize);
 
-    pub fn init() Self {
-        var mark = Mark.ZERO;
-
-        if (top) |t| {
-            mark = t.mark;
-        }
-
-        return .{
-            .mark = mark,
-            .previous = top,
-        };
-    }
-
-    pub fn deinit(self: *Self) void {
-        if (std.debug.runtime_safety) {
-            if (top) |t| {
-                assert(t == self or t == self.previous);
-            }
-        }
-
-        top = self.previous;
-
-        // can do some incremental sorting here too at some point
-        //                             - Albert Liu, Mar 31, 2022 Thu 02:45 EDT
-    }
-
-    pub fn allocator(self: *Self) Allocator {
-        if (std.debug.runtime_safety) {
-            if (top) |t| {
-                assert(t == self or t == self.previous);
-            }
-        }
-
-        top = self;
-
-        const resize = Allocator.NoResize(Self).noResize;
-        const free = Allocator.NoOpFree(Self).noOpFree;
-
-        return Allocator.init(self, Self.allocate, resize, free);
-    }
-
-    fn allocate(
-        self: *Self,
-        len: usize,
-        ptr_align: u29,
-        len_align: u29,
-        ret_addr: usize,
-    ) Allocator.Error![]u8 {
-        _ = len_align;
-
-        return bump.allocate(&self.mark, Pages, len, ptr_align, ret_addr);
-    }
-};
-
-pub const Frame = FrameAlloc.allocator;
-
-pub fn clearFrameAllocator() void {
-    FrameAlloc.mark = Mark.ZERO;
-}
-
-const FrameAlloc = struct {
-    const InitialSize = 2 * 1024 * 1024;
-    threadlocal var bump = BumpState.init(InitialSize);
-    threadlocal var mark = Mark.ZERO;
-
-    const allocator = Allocator.init(undefined, alloc, resize, free);
+    const allocator = Allocator.init(@intToPtr(*anyopaque, 1), alloc, resize, free);
 
     const resize = Allocator.NoResize(anyopaque).noResize;
     const free = Allocator.NoOpFree(anyopaque).noOpFree;
@@ -239,6 +176,61 @@ const FrameAlloc = struct {
     ) Allocator.Error![]u8 {
         _ = len_align;
 
-        return bump.allocate(&mark, Pages, len, ptr_align, ret_addr);
+        return bump.allocate(&TempMark, Pages, len, ptr_align, ret_addr);
     }
 };
+
+pub const Slab = SlabAlloc.allocator;
+pub fn slabFrameBoundary() void {
+    if (!std.debug.runtime_safety) return;
+
+    const value = @atomicLoad(u64, &SlabAlloc.next, .SeqCst);
+    SlabAlloc.frame_begin = value;
+}
+
+const SlabAlloc = struct {
+    // Naughty dog-inspired allocator, takes 2MB chunks from a pool, and its
+    // ownership of chunks does not outlive the frame boundary.
+
+    const SlabCount = if (@hasDecl(root, "liu_SlabAlloc_SlabCount"))
+        root.liu_SlabAlloc_SlabCount
+    else
+        1024;
+
+    const page = [4096]u8;
+
+    var frame_begin: if (std.debug.runtime_safety) ?u64 else void = if (std.debug.runtime_safety)
+        null
+    else {};
+
+    var next: usize = 0;
+    var slab_begin: [*]align(1024) page = undefined;
+
+    pub fn globalInit() !void {
+        assert(next == 0);
+
+        if (std.debug.runtime_safety) {
+            assert(frame_begin == null);
+        }
+
+        const slabs = try Pages.alignedAlloc(page, SlabCount, 1024);
+        slab_begin = slabs.ptr;
+    }
+
+    pub fn getMem() *[4096]u8 {
+        const out = @atomicRmw(u64, &SlabAlloc.next, .Add, 1, .SeqCst);
+
+        if (std.debug.runtime_safety) {
+            if (frame_begin) |begin| {
+                assert(begin - out < SlabCount);
+            }
+        }
+
+        return &slab_begin[out % SlabCount];
+    }
+};
+
+test "Slab" {
+    try SlabAlloc.globalInit();
+    slabFrameBoundary();
+}
