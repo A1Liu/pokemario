@@ -17,6 +17,10 @@ export interface Vector2 {
 	y: number
 }
 
+// 10m will be our screen height that all positions
+// and vectors are relative
+export const BaseScreenHeight = 10
+
 export function getBoundingBox(position: Vector2, size: Size) {
 	return {
 		startX: position.x,
@@ -37,6 +41,15 @@ export function vec2mul(scalar: number, vec: Vector2): Vector2 {
 	}
 }
 
+export function vec2project(vec: Vector2, screen: Size) {
+	const projectedHeight = (vec.y / BaseScreenHeight) * screen.height
+
+	return {
+		x: 0,
+		y: projectedHeight,
+	}
+}
+
 export function getAccelerationVector(
 	initialVelocity: Vector2,
 	terminalVelocity: Vector2,
@@ -53,9 +66,13 @@ export abstract class Renderable {
 	abstract render(game: Game, ctx: CanvasRenderingContext2D): void
 }
 
-export function applyVelocity(position: Vector2, velocity: Vector2) {
-	position.x += velocity.x
-	position.y += velocity.y
+export function applyVelocity(
+	delta: number,
+	position: Vector2,
+	velocity: Vector2,
+) {
+	position.x += (velocity.x * delta) / 200
+	position.y += (velocity.y * delta) / 200
 	return position
 }
 

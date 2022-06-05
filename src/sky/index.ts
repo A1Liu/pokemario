@@ -2,6 +2,7 @@ import {
 	Renderable,
 	Sprite,
 	RenderableGroup,
+	Position,
 	vec2equal,
 	vec2mul,
 	Vector2,
@@ -17,21 +18,36 @@ class Ground extends Renderable {
 	position: Vector2 = { x: 0, y: 0 }
 
 	render(game: Game, ctx: CanvasRenderingContext2D): void {
-		const height = Math.round(0.15 * game.height)
+		const camera = game.camera
+		const dirtHeight = Math.round(0.15 * camera.height)
+		const grassHeight = Math.round(0.01 * camera.height)
+
+		const dirtBox = camera.getScreenBoundingBox(
+			{ x: 0, y: 0 },
+			camera.width,
+			dirtHeight,
+		)
+		const grassBox = camera.getScreenBoundingBox(
+			{ x: 0, y: dirtHeight },
+			camera.width,
+			grassHeight,
+		)
+
 		ctx.fillStyle = `#8e0909`
-		ctx.fillRect(0, game.height - height, game.width, height)
+		ctx.fillRect(dirtBox.x, dirtBox.y, dirtBox.width, dirtBox.height)
 
-		const grassHeight = Math.round(0.01 * game.height)
+		// const grassHeight = Math.round(0.01 * game.height)
 		ctx.fillStyle = `green`
-		ctx.fillRect(0, game.height - height - grassHeight, game.width, grassHeight)
+		ctx.fillRect(grassBox.x, grassBox.y, grassBox.width, grassBox.height)
 
-		this.position.y = game.height - height - grassHeight
+		this.position.y = dirtHeight + grassHeight
 
+		const { height, width } = camera.screenDimensions()
 		ctx.textAlign = 'left'
 		ctx.textBaseline = 'bottom'
 		ctx.font = '24px monospace'
 		ctx.fillStyle = '#fff'
-		ctx.fillText(`score: ${game.score}`, 10, game.height - 10 - 24 - 10)
+		ctx.fillText(`score: ${game.score}`, 10, height - 10 - 24 - 10)
 
 		ctx.textAlign = 'left'
 		ctx.textBaseline = 'bottom'
@@ -40,24 +56,20 @@ class Ground extends Renderable {
 		ctx.fillText(
 			`time: ${Math.floor(game.timeElapsed / 1e3)}s`,
 			10,
-			game.height - 10,
+			height - 10,
 		)
 
 		ctx.textAlign = 'right'
 		ctx.textBaseline = 'bottom'
 		ctx.font = '24px monospace'
 		ctx.fillStyle = '#fff'
-		ctx.fillText(
-			`lives: ${game.lives}`,
-			game.width - 10,
-			game.height - 10 - 24 - 10,
-		)
+		ctx.fillText(`lives: ${game.lives}`, width - 10, height - 10 - 24 - 10)
 
 		ctx.textAlign = 'right'
 		ctx.textBaseline = 'bottom'
 		ctx.font = '24px monospace'
 		ctx.fillStyle = '#fff'
-		ctx.fillText(`fps: ${this.getFps()}`, game.width - 10, game.height - 10)
+		ctx.fillText(`fps: ${this.getFps()}`, width - 10, height - 10)
 	}
 
 	fpsSamples: number[] = []
@@ -96,7 +108,7 @@ export class Landscape extends RenderableGroup<
 				),
 				new SkyBackground(
 					{
-						x: game.width,
+						x: game.camera.width,
 						y: 0,
 					},
 					game,
@@ -105,7 +117,7 @@ export class Landscape extends RenderableGroup<
 		)
 
 		this.sprites.add(this.ground)
-		this.walkVelocity = { x: 0.01 * game.width, y: 0 }
+		this.walkVelocity = { x: 0.01 * game.camera.width, y: 0 }
 		this.sprintVelocity = vec2mul(3, this.walkVelocity)
 	}
 

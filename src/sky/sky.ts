@@ -44,7 +44,7 @@ class Cloud {
 			},
 			delta,
 		).opacity
-		applyVelocity(this.sprite.position, this.velocity)
+		applyVelocity(delta, this.sprite.position, this.velocity)
 		this.position = this.sprite.position
 		this.size = this.sprite.size
 	}
